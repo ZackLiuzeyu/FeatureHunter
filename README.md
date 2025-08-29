@@ -15,8 +15,12 @@ devtools::install_github("ZackLiuzeyu/FeatureHunter")
 library(FeatureHunter)
 ```
 
-## 示例脚本可在这里获取（已经包含示例数据提取，可直接跑）：
-[⬇️ Download TestFlight.R](https://raw.githubusercontent.com/ZackLiuzeyu/FeatureHunter/master/inst/scripts/TestFlight.R)
+## 🔽 示例脚本 / Example Script
+
+点击下面链接即可一键下载（可直接跑，分析示例数据）：  
+Click the link below to download:
+
+- [⬇️ TestFlight.R](https://github.com/ZackLiuzeyu/FeatureHunter/releases/download/R/TestFlight.R)
 
 ## 数据准备 / Input Data
 1. 输入至少 **4 个数据集**：  
