@@ -16,7 +16,7 @@ library(FeatureHunter)
 ```
 
 ## 示例脚本可在这里获取：
-- [inst/scripts/TestFlight.R]([https://github.com/ZackLiuzeyu/FeatureHunter/blob/master/inst/scripts/TestFlight.R]
+[⬇️ Download TestFlight.R](https://raw.githubusercontent.com/ZackLiuzeyu/FeatureHunter/master/inst/scripts/TestFlight.R)
 
 ## 数据准备 / Input Data
 1. 输入至少 **4 个数据集**：  
