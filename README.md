@@ -1,6 +1,6 @@
 # FeatureHunter
 <!-- badges: start -->
-[![R-CMD-check]](https://github.com/ZackLiuzeyu/FeatureHunter/actions/workflows/R-CMD-check.yaml)
+[[R-CMD-check]](https://github.com/ZackLiuzeyu/FeatureHunter/actions/workflows/R-CMD-check.yaml)
 <!-- badges: end -->
 
 **FeatureHunter** 是一个“机器学习 + 深度学习”一体化的特征发现与可解释性分析工具箱。  
