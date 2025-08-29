@@ -7,7 +7,10 @@
 ## 安装
 
 ```r
-# install.packages("devtools")
+if (!requireNamespace("devtools", quietly = TRUE)) {
+  install.packages("devtools")
+}
+library(devtools)
 devtools::install_github("ZackLiuzeyu/FeatureHunter")
 library(FeatureHunter)
 ```
