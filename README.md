@@ -2,12 +2,16 @@
 
 
 **FeatureHunter** 是一个“机器学习 + 深度学习”一体化的特征发现与可解释性分析工具箱。  
-它提供 **28 个模型接口**（**1 个 MLP + 27 个经典ML**），并通过核心函数 **`fh_hunter()`** 从排行榜里自动识别最优模型，统一计算三类特征重要性（模型内置、Permutation、SHAP），用稳健 z 分数（median/MAD）做 **复合打分**，再结合多次重复训练（不同种子）和自举置信区间完成 **稳健特征筛选**、可视化与下游验证（UMAP、Logistic 回归公式等）。
+它提供 **28 个模型接口**（**1 个 MLP + 27 个经典ML**），并通过核心函数 **`fh_hunter()`** 从排行榜里获取最优模型，统一计算三类特征重要性（模型内置、Permutation、SHAP），用稳健 z 分数（median/MAD）做 **复合打分**，再结合多次重复训练（不同种子）和自举置信区间完成 **稳健特征筛选**、可视化与下游验证（UMAP、Logistic 回归公式等）。
 **数据要求**，
+1、输入至少 4 个数据集，其中 1 个作为训练集，命名为 DatasetA，1 个作为验证集 DatasetB，2 个作为测试集 DatasetC 和 DatasetD，文件分别保存为 DatasetA.txt、DatasetB.txt、DatasetC.txt、DatasetD.txt。
+2、输入至少 4 个样本信息表，格式类似于我的示例文档，命名为 SampleA.txt、SampleB.txt、SampleC.txt、SampleD.txt。
+3、输入一个公共基因列表文件，命名为 Common_genes.txt。
 1、Input at least 4 datasets, 1 as training set called DatasetA, 1 as validation set DatasetB, 2 as test sets DatasetC and DatasetD, save as DatasetA.txt, DatasetB.txt, DatasetC.txt, DatasetD.txt，
 2、Input at least 4 sample information tables, similar to my example document, named SampleA.txt, SampleB.txt, SampleC.txt, SampleD.txt.
 3、Input a common gene list file, named Common_genes.txt
 
+#如果超过4个数据集，从第3个数据集之后的所有数据集将作为测试集
 #If more than 4 datasets are provided, the 3rd and subsequent datasets will be treated as test sets
 
 ## 安装
