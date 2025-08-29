@@ -87,9 +87,9 @@ Finally, put all the above documents into a clean folder, and name the folder ra
 > 这些图表既能用于方法学报告（补充材料/附录），也能直接嵌入论文结果部分。
 
 
-### 前置筛选（两条路）
+### 前置筛选（三条路）
 - **路线 A · MLP 专项筛选（`fh_mlp()`）**  
-- **重要性三件套**：SMLP 权重、输入梯度、fastshap SHAP；先对每 run 做稳健 z-score，再融合为复合分数。
+- **调参方式**：包含常规调参（学习率等）和精细化调参（L2惩罚，高斯噪音），满足不同需求
 - **阈值**：支持 F1 / Youden 自动或手动；适配类别不平衡。
 - **复现性**：多 seed 重复、可选 bootstrap 置信区间；固定 `seed` 可复现。
 
@@ -100,7 +100,12 @@ Finally, put all the above documents into a clean folder, and name the folder ra
 - **可控随机性**：固定随机种子，多次重复以降低方差。
 - **落盘**：结果与关键图表/CSV 自动保存，供 `fh_hunter()` 后续读取复用。
 
-> 两条路都会产出一个**排行榜（CSV）**与若干可视化。`fh_hunter()` 会 **自动读取该排行榜**，根据你设定的指标与行号（`score_index`/`pick_index`）锁定候选最优模型，然后进入它的统一重要性计算与下游流程。
+- **路线 C · 全套筛选（`fh_mlp()`+`fh_run_ml_models()`）**  
+- **用法**：同时跑以上两种函数，获得28类模型结果，更具有说服力
+- **阈值**：支持 F1 / Youden 自动或手动；适配类别不平衡。
+- **复现性**：多 seed 重复、可选 bootstrap 置信区间；固定 `seed` 可复现。
+
+> 三条路都会产出一个**排行榜（CSV）**与若干可视化。`fh_hunter()` 会 **自动读取该排行榜**，根据你设定的指标与行号（`score_index`/`pick_index`）锁定候选最优模型，然后进入它的统一重要性计算与下游流程。
 
    - Top20 箱线图、Composite 柱图（均值+95%CI）、三法分布对比密度、UMAP（Top 基因）、稳定性热图（跨 run）  
    - 选定 Top 基因后进行 **Logistic 回归**，输出 **系数表与可直接引用的公式**（便于撰写论文方法/公式部分）。
@@ -180,7 +185,7 @@ head(res$importance_df)
 res$glm_summary$formula   # 论文可直接引用的公式
 ```
 
-> 如果你只想直接用 MLP：请看 `fh_mlp()`，支持 SMLP/Gradient/SHAP 三路重要性与固定风格绘图；超参既可从排行榜自动解析，也可手动覆盖。
+> 如果你只想直接用 MLP：请看 `fh_mlp()`，支持三路重要性与固定风格绘图；超参既可从排行榜自动解析，也可手动覆盖。
 
 ## 实用提示
 - **阈值自动化**：`auto_th_method` 根据类别不平衡与可用指标在 F1 / Youden 之间自动选择，亦可手动指定。  
@@ -190,5 +195,5 @@ res$glm_summary$formula   # 论文可直接引用的公式
 
 ---
 
-最后更新：2025-08-28 16:24  
+最后更新：2025-08-29 10:02 UTC+8  
 欢迎提 Issue / PR：**ZackLiuzeyu/FeatureHunter**
