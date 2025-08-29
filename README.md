@@ -3,6 +3,15 @@
 
 **FeatureHunter** 是一个“机器学习 + 深度学习”一体化的特征发现与可解释性分析工具箱。  
 它提供 **28 个模型接口**（**1 个 MLP + 27 个经典ML**），并通过核心函数 **`fh_hunter()`** 从排行榜里获取最优模型，统一计算三类特征重要性（模型内置、Permutation、SHAP），用稳健 z 分数（median/MAD）做 **复合打分**，再结合多次重复训练（不同种子）和自举置信区间完成 **稳健特征筛选**、可视化与下游验证（UMAP、Logistic 回归公式等）。
+
+## 安装
+
+```r
+# install.packages("devtools")
+devtools::install_github("ZackLiuzeyu/FeatureHunter")
+library(FeatureHunter)
+```
+
 **数据要求**，
 ## 数据准备 / Input Data
 1. 输入至少 **4 个数据集**：  
@@ -35,14 +44,6 @@ Finally, put all the above documents into a clean folder, and name the folder ra
 **补充说明 / Notes**：  
 - 如果提供超过 4 个数据集，从第 **3 个数据集开始**及其之后的所有数据集都将作为测试集。  
 - *If more than 4 datasets are provided, the 3rd and subsequent datasets will be treated as test sets.*  
-
-## 安装
-
-```r
-# install.packages("devtools")
-devtools::install_github("ZackLiuzeyu/FeatureHunter")
-library(FeatureHunter)
-```
 
 ## 模型接口一览（28）
 - **深度学习**：`fh_mlp()`（SMLP 权重 / 输入梯度 / fastshap SHAP）  
