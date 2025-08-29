@@ -52,7 +52,11 @@ Finally, put all the above documents into a clean folder, and name the folder ra
 
 **补充说明 / Notes**：  
 - 如果提供超过 4 个数据集，从第 **3 个数据集开始**及其之后的所有数据集都将作为测试集。  
-- *If more than 4 datasets are provided, the 3rd and subsequent datasets will be treated as test sets.*  
+- *If more than 4 datasets are provided, the 3rd and subsequent datasets will be treated as test sets.*
+  
+<!-- badges: start -->
+[![R-CMD-check](https://github.com/ZackLiuzeyu/FeatureHunter/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/ZackLiuzeyu/FeatureHunter/actions/workflows/R-CMD-check.yaml)
+<!-- badges: end -->
 
 ## 模型接口一览（28）
 - **深度学习**：`fh_mlp()`（SMLP 权重 / 输入梯度 / fastshap SHAP）  
