@@ -15,6 +15,8 @@
 3. 输入一个 **公共基因列表文件**：  
    - 命名为：`Common_genes.txt`
   
+最后把以上所有文档单独放到一个干净的文件夹内，并将文件夹命名为raw_data,在使用时在相应位置填写该文件夹路径，即可开始分析
+  
      
 1. Input at least **4 datasets**:  
       - 1 as training set called **DatasetA**  
@@ -24,7 +26,10 @@
 2. Input at least **4 sample information tables**, similar to the example document:  
       - Named: `SampleA.txt`, `SampleB.txt`, `SampleC.txt`, `SampleD.txt`  
 3. Input a **common gene list file**:  
-      - Named: `Common_genes.txt`  
+      - Named: `Common_genes.txt`
+        
+Finally, put all the above documents into a clean folder, and name the folder raw_data, fill in the folder path in the corresponding location when using, you can start the analysis
+
 ---
 
 **补充说明 / Notes**：  
