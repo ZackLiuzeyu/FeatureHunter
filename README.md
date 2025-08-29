@@ -117,7 +117,7 @@ Finally, put all the above documents into a clean folder, and name the folder ra
 > 三条路都会产出一个**排行榜（CSV）**与若干可视化。`fh_hunter()` 会 **自动读取该排行榜**，根据你设定的指标与行号（`score_index`/`pick_index`）锁定候选最优模型，然后进入它的统一重要性计算与下游流程。
 
    - Top20 箱线图、Composite 柱图（均值+95%CI）、三法分布对比密度、UMAP（Top 基因）、稳定性热图（跨 run）  
-   - 选定 Top 基因后进行 **Logistic 回归**，输出 **系数表与可直接引用的公式**（便于撰写论文方法/公式部分）。
+   - 选定 Top 基因后进行 **Logistic 回归（黑箱模型）/模型本身的参数**，输出 **系数表与可直接引用的公式**（便于撰写论文方法/公式部分）。
 
 ## 生成的文件（默认输出到 `out_dir`）
 - `FI_Boxplot_Top20.pdf` — Top-20 特征重要性分布箱线图  
@@ -177,7 +177,7 @@ Finally, put all the above documents into a clean folder, and name the folder ra
 - `top_list`：每次 run 的 Top 基因列表  
 - `final_top`：应用严格筛选后的最终 Top 集合  
 - `composite_mat`：逐 run 的复合分数矩阵  
-- `glm_summary`：基于最终 Top 基因的 Logistic 回归结果（含公式）  
+- `glm_summary`：基于最终 Top 基因的 Logistic（黑箱模型）或模型本身对应的 回归结果（含公式）  
 
 ## 快速上手示例
 
