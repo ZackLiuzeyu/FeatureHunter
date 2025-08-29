@@ -57,10 +57,63 @@ Finally, put all the above documents into a clean folder, and name the folder ra
 - *If more than 4 datasets are provided, the 3rd and subsequent datasets will be treated as test sets.*
   
 
-## 模型接口一览（28）
+## 模型接口总览（28）
 - **深度学习**：`fh_mlp()`（SMLP 权重 / 输入梯度 / fastshap SHAP）  
 - **经典 ML（节选）**：rf / xgboost / svm / glmnet / gbm / C5.0 / nnet / earth / glmStepAIC / sda / kknn / bayesglm / catboost 等，均带有 `*_best` 或 `lasso_*` 变体以支持 LASSO 预筛选与 CV 调参。  
-> 完整函数清单见本仓库 `R/` 目录与下文“API 参考”。
+
+## 🧠 深度学习 (Deep Learning)
+* **多层感知机 (Multilayer Perceptron, MLP):** `fh_mlp`
+
+---
+
+## 📈 线性回归模型 (Linear Models & Regression)
+* **逻辑回归 (Logistic Regression):** `fh_logistic`
+* **岭回归 (Ridge Regression):** `fh_ridge_glmnet`
+* **LASSO 回归 (LASSO Regression):** `fh_lasso_glmnet`
+* **弹性网络 (Elastic Net):** `fh_elastic_net`
+* **逐步逻辑回归 (Stepwise Logistic Regression):** `fh_stepwise_logistic`
+
+---
+
+## 🧭 判别分析 & K近邻 (Discriminant Analysis & KNN)
+* **线性判别分析 (LDA):** `fh_lda`
+* **二次判别分析 (QDA):** `fh_qda`
+* **K近邻 (KNN):** `fh_knn`
+* **LASSO特征筛选 + LDA:** `fh_lasso_lda`
+* **LASSO特征筛选 + QDA:** `fh_lasso_qda`
+* **LASSO特征筛选 + KNN:** `fh_lasso_knn`
+
+---
+
+## 🌳 树模型 (Tree-Based Models)
+* **决策树 (Decision Tree):** `fh_tree`
+* **随机森林 (Random Forest):** `fh_rf`
+* **LASSO特征筛选 + 决策树:** `fh_lasso_tree`
+* **LASSO特征筛选 + 随机森林:** `fh_lasso_rf`
+
+---
+
+## 🚀 Boosting 模型 (Boosting Models)
+* **XGBoost:** `fh_xgboost`
+* **梯度提升机 (GBM):** `fh_gbm`
+* **梯度提升机 (最佳调参):** `fh_gbm_best`
+* **LASSO特征筛选 + XGBoost (默认参数):** `fh_lasso_xgboost_default`
+* **LASSO特征筛选 + XGBoost (最佳调参):** `fh_lasso_xgboost_best`
+* **LASSO特征筛选 + GBM:** `fh_lasso_gbm`
+* **LASSO特征筛选 + GBM (最佳调参):** `fh_lasso_gbm_best`
+
+---
+
+## 🤖 支持向量机 (Support Vector Machine, SVM)
+* **支持向量机 (基础):** `fh_svm`
+* **支持向量机 (最佳调参):** `fh_svm_best`
+* **LASSO特征筛选 + SVM (最佳调参):** `fh_lasso_svm_best`
+
+---
+
+## 🎲 贝叶斯模型 (Bayesian Models)
+* **朴素贝叶斯 (Naive Bayes):** `fh_naive_bayes`
+* **LASSO特征筛选 + 朴素贝叶斯:** `fh_lasso_naive_bayes`
 
 ## 工作流总览（`fh_hunter()`）
 1. **自动选型**：从排行榜（CSV）中按指标（默认 F1）选择第 `pick_index` 行对应的最优模型；支持任意模型类型（MLP / RF / GLMNET / XGBoost / SVM / LDA / QDA / NaiveBayes…）。  
