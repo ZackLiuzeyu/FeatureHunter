@@ -15,7 +15,7 @@ devtools::install_github("ZackLiuzeyu/FeatureHunter")
 library(FeatureHunter)
 ```
 
-## 🔽 示例脚本 / Example Script
+## 示例脚本 / Example Script
 
 点击下面链接即可一键下载（可直接跑，分析示例数据）：  
 Click the link below to download:
