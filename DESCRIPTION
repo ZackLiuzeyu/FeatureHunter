@@ -1,6 +1,6 @@
 Package: FeatureHunter
 Type: Package
-Title: COAD Machine Learning and Deep Learning Workflow Helpers
+Title: Machine Learning and Deep Learning Workflow Helpers
 Version: 0.1.1
 Authors@R: 
     person(given = "Zeyu", family = "Liu", role = c("aut", "cre"),
