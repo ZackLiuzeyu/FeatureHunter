@@ -13,10 +13,10 @@ jobs:
       matrix:
         config:
           - {os: ubuntu-22.04, r: 'devel', http-user-agent: 'release'}
-          - {os: ubuntu-22.04, r: 'release'}
-          - {os: ubuntu-22.04, r: 'oldrel-1'}
-          - {os: windows-latest, r: 'release'}
-          - {os: macos-13, r: 'release'} # 避免 macOS 15 变更
+          - {os: ubuntu-22.04, r: '4.4.1'}
+          - {os: ubuntu-22.04, r: '4.4.1'}
+          - {os: windows-latest, r: '4.4.1'}
+          - {os: macos-13, r: '4.4.1'} # 避免 macOS 15 变更
     runs-on: ${{ matrix.config.os }}
     env:
       GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
