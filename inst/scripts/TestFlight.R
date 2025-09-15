@@ -502,12 +502,11 @@ res <- fh_hunter(
   nshow = 40,
   namesS = c("Accuracy","Recall","F-score"),
   score_index = 3,# 1 refers to Accuracy, 2 to Recall, 3 to F-score ,actually the index of the metric you care most in the top nshow models you exported
-  pick_index = 2,# the rank of the model you like in the dataset you specified above 
-  #Ooops,the first model's threshold is too low(0.01) and the confusion curve is not good in A, so I choose the second model, the effect is actually similar
+  pick_index = 1,# the rank of the model you like in the dataset you specified above 
   seed = 42,
   num_runs = 10,
   num_coregene = 29,     #genes to show in the composite barplot
-  n_likes = 6,           #genes for UMAP and Regression
+  n_likes = 8,           #genes for UMAP and Regression
   n_interest = 4,        #genes for stability heatmap
   
   ##parameters below are optional and have default values adjust when necessary
