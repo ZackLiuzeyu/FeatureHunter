@@ -61,7 +61,7 @@ Finally, put all the above documents into a clean folder, and name the folder ra
 
 ## 模型接口总览（28）
 - **深度学习**：`fh_mlp()`（SMLP 权重 / 输入梯度 / fastshap SHAP）  
-- **经典 ML（节选）**：rf / xgboost / svm / glmnet / gbm / C5.0 / nnet / earth / glmStepAIC / sda / kknn / bayesglm / catboost 等，均带有 `*_best` 或 `lasso_*` 变体以支持 LASSO 预筛选与 CV 调参。  
+- **经典 ML（节选）**：rf / xgboost / svm / glmnet / gbm /  glmStepAIC / sda / knn / bayesglm / catboost 等，均带有 `*_best` 或 `lasso_*` 变体以支持 LASSO 预筛选与 CV 调参。  
 
 ## 🧠 深度学习 (Deep Learning)
 * **多层感知机 (Multilayer Perceptron, MLP):** `fh_mlp`
