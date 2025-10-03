@@ -259,5 +259,5 @@ res$glm_summary$formula   # 论文可直接引用的公式
 
 ---
 
-最后更新：2025-08-29 10:02 UTC+8  
+最后更新：2025-10-03 19:43 UTC+8  
 欢迎提 Issue / PR：**ZackLiuzeyu/FeatureHunter**
