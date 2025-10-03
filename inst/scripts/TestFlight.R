@@ -17,6 +17,23 @@ library(FeatureHunter)
 #If more than 4 datasets are provided, the 3rd and subsequent datasets will be treated as test sets
 dir_sample <- fh_example_path("raw_data_pncs") #this is the path to your data folder, modify it to your own data folder
 # dir_sample <- "your_data_folder_path"
+
+#if you have too many genes, use the following function to reduce the number of genes
+#The final reduced gene list is stored in DatasetD_combo_pos_gene_list.txt
+#If you run the following code, please manually replace the gene names in Common_genes.txt with those in DatasetD_combo_pos_gene_list.txt
+#all the results below will be saved in preprocess folder
+res <- fh_dimreduce(
+  dir = dir_sample,
+  train_exp_name = "DatasetD.txt",  #The expression matrix you want to use for dimension reduction
+  hub_file = "Common_genes.txt",    
+  positive_label = "Disease",       
+  max_components = 30,              # At most how many principal components/independent components, recommended 20-50
+  min_genes = 50,                  # At least how many genes to do dimension reduction, recommended 30-100
+  pls_ncomp_default = 10,           # PLS-DA default number of components
+  normalize = TRUE                  # Whether to standardize the expression data before dimension reduction (recommended TRUE)
+)
+
+
 dat <- fh_load_data(
   dir            = dir_sample,
   train_exp_name = "DatasetA.txt",
@@ -25,7 +42,7 @@ dat <- fh_load_data(
   assign_to_global = TRUE,       # write the objects to global env
 )
 
-# 现在全局里就有：
+# now you have in the global env:
 # allfiles, labels_files, labels_list, exp_files, exp_list,
 # com_genes, all_labels, x_train, y_train, x_tests
 
@@ -531,7 +548,7 @@ res <- fh_hunter(
   auto_th_method     = "auto",
   # knobs for strict filtering,DO NOT change the default values unless you know what you are doing
   method_weights     = c(model = 1, perm = 1, shap = 1),
-  ci_level           = 0.99,
+  ci_level           = 0.99,#except for this one, you may change to 0.95 for broader selection or 0.99 for stricter selection
   strict_min_freq    = 0.75,
   strict_min_effect  = 0.55,
   strict_ci_gate     = TRUE,
@@ -570,9 +587,6 @@ out <- fh_plot_model(
 # 
 
 
-
-
-
 fh_plot_PRROC(
   n_model = 10,               # displaying top 10 models
   score_index = 3,   # use accuracy ranking
@@ -583,16 +597,6 @@ fh_plot_PRROC(
 
 #save the important objects to an RData file
 save.image(file = "FeatureHunter_Workspace.RData")
-
-
-
-
-
-
-
-
-
-
 
 
 
