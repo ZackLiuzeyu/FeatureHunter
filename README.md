@@ -24,7 +24,7 @@ library(FeatureHunter)
 点击下面链接即可一键下载（可直接跑，分析示例数据）：  
 Click the link below to download:
 
-- [⬇️ TestFlight.R](https://github.com/ZackLiuzeyu/FeatureHunter/releases/download/R/TestFlight.R)
+- [⬇️ TestFlight.R](https://github.com/ZackLiuzeyu/FeatureHunter/releases/download/v1.0.1/TestFlight.V1.0.1.R)
 
 ## 数据准备 / Input Data
 1. 输入至少 **4 个数据集**：  
