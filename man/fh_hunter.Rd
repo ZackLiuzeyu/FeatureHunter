@@ -77,7 +77,7 @@ fh_hunter(
 
 \item{num_coregene}{Number of core genes to keep in stability/importance plots.}
 
-\item{n_likes}{Number of top genes to use in downstream analysis (UMAP, logistic).}
+\item{n_likes}{Integer or "auto".Number of top genes to use in downstream analysis (UMAP, logistic). When "auto", UMAP/logistic will use the count of genes whose 95\% CI does not cross 0 within the composite bar plot candidate set.}
 
 \item{n_interest}{Number of genes to show in the stability heatmap.}
 
@@ -199,9 +199,10 @@ Output files in \code{out_dir}:
 \examples{
 \dontrun{
 res <- fh_hunter(
-  train_exp = X, train_labels = Y,
+  train_exp = X, 
+  train_labels = Y,
   nshow = 40, score_index = 3, pick_index = 1,
-  num_runs = 5, num_coregene = 50, n_likes = 30, n_interest = 30,
+  num_runs = 5, num_coregene = 50, n_likes = 30, n_interest = 30,# n_likes = "auto"
   strict_min_freq = 0.65, strict_ci_gate = TRUE, strict_knee = TRUE, strict_nmax = 10
 )
 head(res$importance_df)

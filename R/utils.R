@@ -1219,6 +1219,25 @@ to01 <- function(x) {
   yi <- as_binary01(label_df[match(comd, ids), 2])
   list(x = Xi, y = yi, n = nrow(Xi), overlap = length(comd))
 }
+.y_to_num <- function(y) {
+  # factor("0","1") -> 0/1；"Normal"/"Tumor" -> 0/1（把第二个水平当阳性）
+  if (is.factor(y)) {
+    lev <- levels(y)
+    if (all(lev %in% c("0", "1"))) {
+      return(as.integer(as.character(y)))
+    } else {
+      return(as.integer(y == lev[2L]))
+    }
+  }
+  y <- as.integer(y)
+  if (!all(y %in% c(0L, 1L))) y <- as.integer(y == max(y, na.rm = TRUE))
+  y
+}
 
+.y_to_fac <- function(y) {
+  # 任何输入 -> factor("0","1")
+  yn <- .y_to_num(y)
+  factor(yn, levels = c(0, 1), labels = c("0", "1"))
+}
 
 

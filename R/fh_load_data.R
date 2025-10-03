@@ -37,6 +37,12 @@ fh_load_data <- function(dir,
     utils::read.table(path, header = TRUE, sep = "\t", row.names = 1, check.names = FALSE)
   }
   .read_labels <- function(path) {
+    # try to read a few lines as UTF-8 to check encoding
+    test_enc <- tryCatch(readLines(path, n = 5, encoding = "UTF-8"), error = function(e) NULL)
+    if (is.null(test_enc)) {
+      warning("This txt file may have been exported from another format and is not UTF-8 encoded. ",
+              "Please copy all text into a newly created txt file and re-import.")
+    }
     utils::read.table(path, sep = "\t", header = FALSE, stringsAsFactors = FALSE)
   }
   
@@ -66,7 +72,13 @@ fh_load_data <- function(dir,
   
   # hub genes = intersection with common genes across datasets
   common_across <- Reduce(intersect, lapply(exp_list, rownames))
-  hub_vec <- utils::read.table(file.path(dir, hub_file), sep = "\t", stringsAsFactors = FALSE)[, 1]
+  hub_path <- file.path(dir, hub_file)
+  first_lines <- tryCatch(readLines(hub_path, n = 5, encoding = "UTF-8"), error = function(e) NULL)
+  if (is.null(first_lines)) {
+    warning("This txt file may have been exported from another format and is not UTF-8 encoded. ",
+            "Please copy all text into a newly created txt file and re-import.")
+  }
+  hub_vec <- utils::read.table(hub_path, sep = "\t", stringsAsFactors = FALSE)[, 1]
   com_genes <- intersect(unique(common_across), unique(hub_vec))
   if (!length(com_genes)) stop("No common hub genes found across datasets.")
   
@@ -74,19 +86,30 @@ fh_load_data <- function(dir,
   exp_list <- lapply(exp_list, function(x) t(x[com_genes, , drop = FALSE]))
   
   # read labels and standardize to 0/1
+  # read labels and standardize to 0/1 (robust to factor/character/whitespace)
   labels_list <- lapply(file.path(dir, labels_files), .read_labels)
   all_labels <- do.call(rbind, labels_list)
   if (ncol(all_labels) < 2) stop("Label files must have at least two columns: sample_id, label_raw")
   colnames(all_labels)[1:2] <- c("sample_id", "label_raw")
   rownames(all_labels) <- all_labels$sample_id
-  all_labels$label <- ifelse(all_labels$label_raw == positive_label, 1, 0)
+  
+  # 统一成字符并去空格，正类标签也统一成字符比较
+  lab_raw_chr <- trimws(as.character(all_labels$label_raw))
+  pos_chr    <- trimws(as.character(positive_label))
+  
+  # 真·0/1，整数型，不走因子
+  all_labels$label <- as.integer(lab_raw_chr == pos_chr)
   
   # train set
   x_train <- exp_list[[1]]
   common_ids <- intersect(rownames(x_train), rownames(all_labels))
   if (!length(common_ids)) stop("No overlapping samples between train expression and labels.")
   x_train <- x_train[common_ids, , drop = FALSE]
-  y_train <- factor(all_labels[common_ids, "label"], levels = c(0, 1))
+  
+  # y：直接用整数 0/1；若下游某些绘图需要因子，也额外给一个 factor 版本
+  y_train_num    <- all_labels[common_ids, "label"]
+  y_train_factor <- factor(y_train_num, levels = c(0, 1), labels = c("0","1"))
+  y_train <- y_train_factor  # 下游建模用这个
   
   # external tests
   x_tests <- if (length(exp_list) > 1) exp_list[-1] else list()
@@ -95,13 +118,25 @@ fh_load_data <- function(dir,
   # bundle results
   res <- list(
     x_train = x_train,
-    y_train = y_train,
     x_tests = x_tests,
     genes = com_genes,
     all_labels = all_labels,
     files = list(allfiles = allfiles, labels_files = labels_files, exp_files = exp_files),
     exp_list = exp_list,
-    com_genes = com_genes
+    com_genes = com_genes,
+    y_train = y_train_factor,
+    pos_rate_summary = {
+      # 汇总每个数据集的阳性率，方便 sanity check
+      sets <- c("Set_1", if (length(exp_list) > 1) paste0("Set_", seq_len(length(exp_list))[-1]) else character(0))
+      lbl <- all_labels[colnames(t(exp_list[[1]])), , drop=FALSE]  # 先用训练集名作为占位
+      data.frame(
+        Dataset  = c("Set_1"),
+        Total    = length(y_train_num),
+        Positive = sum(y_train_num == 1L),
+        Negative = sum(y_train_num == 0L),
+        PosRate  = round(mean(y_train_num == 1L), 4)
+      )
+    }
   )
   
   # optional: assign into a target environment (e.g., .GlobalEnv)

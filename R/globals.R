@@ -28,3 +28,5 @@ utils::globalVariables(c(
 utils::globalVariables(c("collector", "prob_val"))
 
 utils::globalVariables(c("Composite_lo", "Composite_hi"))
+
+utils::globalVariables(c("Group", "Sample", "Combo_z"))

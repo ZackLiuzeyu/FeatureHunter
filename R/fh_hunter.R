@@ -22,7 +22,7 @@
 #' @param top_models_csv Path to leaderboard CSV (auto-inferred if \code{NULL}).
 #' @param num_runs Number of repeat runs (seeds) (default: 10).
 #' @param num_coregene Number of core genes to keep in stability/importance plots.
-#' @param n_likes Number of top genes to use in downstream analysis (UMAP, logistic).
+#' @param n_likes Integer or "auto".Number of top genes to use in downstream analysis (UMAP, logistic). When "auto", UMAP/logistic will use the count of genes whose 95% CI does not cross 0 within the composite bar plot candidate set.
 #' @param n_interest Number of genes to show in the stability heatmap.
 #' @param seed Random seed (default: 424).
 #' @param out_dir Output directory for plots (default: working dir).
@@ -107,9 +107,10 @@
 #' @examples
 #' \dontrun{
 #' res <- fh_hunter(
-#'   train_exp = X, train_labels = Y,
+#'   train_exp = X, 
+#'   train_labels = Y,
 #'   nshow = 40, score_index = 3, pick_index = 1,
-#'   num_runs = 5, num_coregene = 50, n_likes = 30, n_interest = 30,
+#'   num_runs = 5, num_coregene = 50, n_likes = 30, n_interest = 30,# n_likes = "auto"
 #'   strict_min_freq = 0.65, strict_ci_gate = TRUE, strict_knee = TRUE, strict_nmax = 10
 #' )
 #' head(res$importance_df)
@@ -121,6 +122,7 @@
 #' @importFrom rpart rpart
 #' @importFrom partykit varimp
 #' @importFrom logistf logistf
+#' @importFrom magrittr %>%
 #' @export
 fh_hunter <- function(
     train_exp,
@@ -1379,6 +1381,19 @@ fh_hunter <- function(
   selected_genes <- cand_df$Gene
   plot_set <- if (isTRUE(apply_selection_to_plots)) selected_genes else colnames(train_exp)
   
+  # Determine effective n_likes for downstream (UMAP/logistic)
+  # When n_likes == "auto", count genes within plot_set whose 95% CI does not cross 0.
+  if (is.character(n_likes) && tolower(n_likes) == "auto") {
+    n_likes_eff <- sum(importance_df$Gene %in% plot_set & importance_df$Composite_lo > 0, na.rm = TRUE)
+    n_likes_eff <- max(2L, as.integer(n_likes_eff))  # keep at least 2 for UMAP
+    message(sprintf(
+      "[fh_hunter] n_likes='auto' -> using %d genes with %.0f%% CI > 0 within plot_set",
+      n_likes_eff, ci_level * 100
+    ))
+  } else {
+    n_likes_eff <- as.integer(n_likes)
+  }
+  
   # Top lists summary (respect plot_set)
   top_df <- as.data.frame(table(unlist(lapply(top_list, function(genelist) {
     head(intersect(genelist, plot_set), n_interest)
@@ -1508,7 +1523,7 @@ fh_hunter <- function(
   final_importance <- importance_df |>
     dplyr::arrange(dplyr::desc(Composite))
   final_top <- intersect(final_importance$Gene, plot_set)
-  final_top <- head(final_top, n_likes)
+  final_top <- head(final_top, n_likes_eff)
   set.seed(seed)
   if (length(final_top) >= 2) {
     um <- umap::umap(train_exp[, final_top, drop = FALSE])
@@ -1544,8 +1559,8 @@ fh_hunter <- function(
   }
   
   
-  ### formula construction for top n_likes genes
-  feat_names <- final_top[1:min(n_likes, length(final_top))]
+  ### formula construction for top n_likes_eff genes
+  feat_names <- final_top[1:min(n_likes_eff, length(final_top))]
   x_all <- as.matrix(train_exp[, feat_names, drop = FALSE])
   y_all <- as.numeric(train_y)
   
@@ -1589,19 +1604,47 @@ fh_hunter <- function(
   }
   
   .fit_logit_or_ridge <- function(x, y,
-                                  alpha_ridge = 0,
+                                  alpha_ridge = 0,        # ridge = 0
                                   firth_ci = FALSE,
                                   firth_maxit = 1000,
-                                  firth_pl_maxit = 1000) {
+                                  firth_pl_maxit = 1000,
+                                  # FIX: 可调阈值
+                                  coef_guard = 20,        # |beta| 超过就触发回退
+                                  pred_guard_pct = 0.99,  # 极端预测比例阈值
+                                  pred_eps = 1e-6) {
+    
     x <- as.matrix(x)
     if (is.null(colnames(x))) colnames(x) <- paste0("X", seq_len(ncol(x)))
-    y <- as.numeric(y)
     
+    # FIX: 规范 y 为 {0,1}
+    if (is.factor(y)) {
+      lev <- levels(y)
+      if (all(lev %in% c("0","1"))) {
+        y <- as.integer(as.character(y))         # "0"/"1" -> 0/1
+      } else {
+        y <- as.integer(y == lev[2L])            # 以第二个水平为阳性 -> 0/1
+      }
+    } else {
+      y <- as.integer(y)
+      if (!all(y %in% c(0L, 1L))) {
+        y <- as.integer(y == max(y, na.rm = TRUE))
+      }
+    }
+    
+    # 清理非有限值行
     ok_row <- rowSums(!is.finite(x)) == 0 & is.finite(y)
     if (!all(ok_row)) {
       x <- x[ok_row, , drop = FALSE]
       y <- y[ok_row]
     }
+    
+    # FIX: 去除近零方差列（z 后仍可能有 ~0 方差）
+    sds <- apply(x, 2, function(col) {
+      s <- stats::sd(col, na.rm = TRUE)
+      if (!is.finite(s)) 0 else s
+    })
+    nzv <- which(apply(x, 2, function(col) is.finite(sd(col)) && sd(col) < 1e-6))
+    if (length(nzv) > 0) x <- x[, -nzv, drop = FALSE]
     
     logistic_data <- data.frame(y = y, x)
     sep_flag <- FALSE
@@ -1627,87 +1670,92 @@ fh_hunter <- function(
     coef_vec <- tryCatch(stats::coef(glm_fit), error = function(e) rep(NA_real_, ncol(x) + 1))
     bad_coef <- any(!is.finite(coef_vec))
     
+    # ---- 定义一个统一的回退函数 ----
+    .fallback_ridge <- function() {
+      if (!requireNamespace("glmnet", quietly = TRUE)) return(NULL)
+      cvfit <- glmnet::cv.glmnet(x, y, family = "binomial", alpha = alpha_ridge, standardize = TRUE)
+      beta  <- as.matrix(stats::coef(cvfit, s = "lambda.min"))
+      intercept <- as.numeric(beta[1, 1])
+      coefs <- as.numeric(beta[-1, 1]); names(coefs) <- rownames(beta)[-1]
+      coefs <- coefs[colnames(x)]; names(coefs) <- colnames(x)
+      coef_summary <- cbind(
+        Estimate     = c(intercept, coefs),
+        `Std. Error` = NA_real_,
+        `z value`    = NA_real_,
+        `Pr(>|z|)`   = NA_real_
+      )
+      rownames(coef_summary) <- c("(Intercept)", names(coefs))
+      list(
+        intercept = intercept,
+        coefs = coefs,
+        coef_summary = coef_summary,
+        source = "ridge_logit_fallback"
+      )
+    }
+    
+    .fallback_firth <- function() {
+      if (!requireNamespace("logistf", quietly = TRUE)) return(NULL)
+      lf <- tryCatch(
+        logistf::logistf(
+          y ~ .,
+          data = logistic_data,
+          control   = logistf::logistf.control(maxit = firth_maxit),
+          pl        = isTRUE(firth_ci),
+          plcontrol = if (isTRUE(firth_ci)) logistf::logistpl.control(maxit = firth_pl_maxit) else NULL
+        ),
+        error = function(e) NULL
+      )
+      if (is.null(lf)) return(NULL)
+      cf <- tryCatch(stats::coef(lf), error = function(e) NULL)
+      if (is.null(cf)) cf <- tryCatch(lf$coefficients, error = function(e) NULL)
+      if (is.null(cf)) return(NULL)
+      varmat <- tryCatch(lf$var, error = function(e) NULL)
+      se <- if (!is.null(varmat) && is.matrix(varmat) &&
+                nrow(varmat) == length(cf) && ncol(varmat) == length(cf)) {
+        sqrt(pmax(diag(varmat), 0))
+      } else rep(NA_real_, length(cf))
+      zval <- ifelse(is.finite(se) & se > 0, cf / se, NA_real_)
+      pval <- ifelse(is.finite(zval), 2 * stats::pnorm(-abs(zval)), NA_real_)
+      coef_summary <- cbind(
+        Estimate     = as.numeric(cf),
+        `Std. Error` = as.numeric(se),
+        `z value`    = as.numeric(zval),
+        `Pr(>|z|)`   = as.numeric(pval)
+      )
+      rownames(coef_summary) <- names(cf)
+      
+      intercept <- unname(cf["(Intercept)"]); if (!is.finite(intercept)) intercept <- 0
+      coef_vec_only <- cf[setdiff(names(cf), "(Intercept)")]
+      coef_vec_only <- coef_vec_only[colnames(x)]
+      names(coef_vec_only) <- colnames(x)
+      
+      list(
+        intercept = as.numeric(intercept),
+        coefs = as.numeric(coef_vec_only),
+        coef_summary = coef_summary,
+        source = "firth_logistic"
+      )
+    }
+    
+    # 先看有没有显式报错/未收敛
     if (sep_flag || nonconv_flag || bad_coef) {
-      if (requireNamespace("logistf", quietly = TRUE)) {
-        lf <- tryCatch(
-          logistf::logistf(
-            y ~ .,
-            data = logistic_data,
-            control   = logistf::logistf.control(maxit = firth_maxit),
-            pl        = isTRUE(firth_ci),
-            plcontrol = if (isTRUE(firth_ci)) logistf::logistpl.control(maxit = firth_pl_maxit) else NULL
-          ),
-          error = function(e) NULL
-        )
-        if (!is.null(lf)) {
-          cf <- tryCatch(stats::coef(lf), error = function(e) NULL)
-          if (is.null(cf)) cf <- tryCatch(lf$coefficients, error = function(e) NULL)
-          if (!is.null(cf)) {
-            varmat <- tryCatch(lf$var, error = function(e) NULL)
-            se <- if (!is.null(varmat) && is.matrix(varmat) &&
-                      nrow(varmat) == length(cf) && ncol(varmat) == length(cf)) {
-              sqrt(pmax(diag(varmat), 0))
-            } else rep(NA_real_, length(cf))
-            zval <- ifelse(is.finite(se) & se > 0, cf / se, NA_real_)
-            pval <- ifelse(is.finite(zval), 2 * stats::pnorm(-abs(zval)), NA_real_)
-            coef_summary <- cbind(
-              Estimate     = as.numeric(cf),
-              `Std. Error` = as.numeric(se),
-              `z value`    = as.numeric(zval),
-              `Pr(>|z|)`   = as.numeric(pval)
-            )
-            rownames(coef_summary) <- names(cf)
-            
-            intercept <- unname(cf["(Intercept)"])
-            if (!is.finite(intercept)) intercept <- 0
-            coef_vec_only <- cf[setdiff(names(cf), "(Intercept)")]
-            coef_vec_only <- coef_vec_only[colnames(x)]
-            names(coef_vec_only) <- colnames(x)
-            
-            return(list(
-              intercept = as.numeric(intercept),
-              coefs = as.numeric(coef_vec_only),
-              coef_summary = coef_summary,
-              source = "firth_logistic"
-            ))
-          }
-        }
-      }
-      
-      if (requireNamespace("glmnet", quietly = TRUE)) {
-        cvfit <- glmnet::cv.glmnet(x, y, family = "binomial", alpha = alpha_ridge, standardize = TRUE)
-        beta  <- as.matrix(stats::coef(cvfit, s = "lambda.min"))
-        intercept <- as.numeric(beta[1, 1])
-        coefs <- as.numeric(beta[-1, 1]); names(coefs) <- rownames(beta)[-1]
-        coefs <- coefs[colnames(x)]; names(coefs) <- colnames(x)
-        coef_summary <- cbind(
-          Estimate = c(intercept, coefs),
-          `Std. Error` = NA_real_,
-          `z value` = NA_real_,
-          `Pr(>|z|)` = NA_real_
-        )
-        rownames(coef_summary) <- c("(Intercept)", names(coefs))
-        return(list(
-          intercept = intercept,
-          coefs = coefs,
-          coef_summary = coef_summary,
-          source = "ridge_logit_fallback"
-        ))
-      }
-      
+      firth_res <- .fallback_firth()
+      if (!is.null(firth_res)) return(firth_res)
+      ridge_res <- .fallback_ridge()
+      if (!is.null(ridge_res)) return(ridge_res)
+      # 实在不行才兜底返回 glm 结果
       intercept <- coef_vec[1]
       coefs <- coef_vec[-1]; coefs[!is.finite(coefs)] <- 0
       names(coefs) <- colnames(x)
       coef_summary <- tryCatch(summary(glm_fit)$coefficients, error = function(e) {
         cm <- cbind(
-          Estimate = c(intercept, coefs),
+          Estimate     = c(intercept, coefs),
           `Std. Error` = NA_real_,
-          `z value` = NA_real_,
-          `Pr(>|z|)` = NA_real_
+          `z value`    = NA_real_,
+          `Pr(>|z|)`   = NA_real_
         )
         rownames(cm) <- c("(Intercept)", colnames(x)); cm
       })
-      
       return(list(
         intercept = intercept,
         coefs = coefs,
@@ -1716,8 +1764,30 @@ fh_hunter <- function(
       ))
     }
     
+    # FIX: 数值卫兵（即使没有 warning 也检测异常）
     intercept <- coef_vec[1]
     coefs <- coef_vec[-1]; names(coefs) <- colnames(x)
+    p_hat <- tryCatch(stats::predict(glm_fit, type = "response"), error = function(e) NULL)
+    extreme_pred <- !is.null(p_hat) && mean(p_hat < pred_eps | p_hat > 1 - pred_eps) > pred_guard_pct
+    too_large <- (is.finite(intercept) && abs(intercept) > coef_guard) ||
+      any(is.finite(coefs) & abs(coefs) > coef_guard)
+    
+    if (extreme_pred || too_large) {
+      firth_res <- .fallback_firth()
+      if (!is.null(firth_res)) return(firth_res)
+      ridge_res <- .fallback_ridge()
+      if (!is.null(ridge_res)) return(ridge_res)
+      # 兜底仍然返回 glm，但标记来源
+      coef_summary <- summary(glm_fit)$coefficients
+      return(list(
+        intercept = intercept,
+        coefs = coefs,
+        coef_summary = coef_summary,
+        source = "native_glm_guard_triggered_no_fallback"
+      ))
+    }
+    
+    # 正常返回 glm 结果
     coef_summary <- summary(glm_fit)$coefficients
     list(
       intercept = intercept,
@@ -1729,8 +1799,10 @@ fh_hunter <- function(
   
   # helpers for QDA and Gaussian NB native formulas
   .qda_to_logit <- function(X, y) {
-    X <- as.matrix(X); y <- as.integer(y)
-    cls <- sort(unique(y)); if (length(cls) != 2) stop("QDA requires binary y.")
+    X <- as.matrix(X)
+    y <- .y_to_fac(y)                 
+    cls <- levels(y)
+    if (length(cls) != 2) stop("QDA requires binary y.")
     x0 <- X[y == cls[1], , drop = FALSE]
     x1 <- X[y == cls[2], , drop = FALSE]
     mu0 <- colMeans(x0); mu1 <- colMeans(x1)
@@ -1761,8 +1833,10 @@ fh_hunter <- function(
   }
   
   .nb_gaussian_to_logit <- function(X, y) {
-    X <- as.matrix(X); y <- as.integer(y)
-    cls <- sort(unique(y)); if (length(cls) != 2) stop("NB requires binary y.")
+    X <- as.matrix(X)
+    y <- .y_to_fac(y)            
+    cls <- levels(y)
+    if (length(cls) != 2) stop("NB requires binary y.")
     x0 <- X[y == cls[1], , drop = FALSE]
     x1 <- X[y == cls[2], , drop = FALSE]
     mu0 <- colMeans(x0); mu1 <- colMeans(x1)
@@ -1788,7 +1862,9 @@ fh_hunter <- function(
   if (identical(model_type, "glmnet")) {
     a_use <- parsed$alpha
     if (is.null(a_use) || is.na(a_use)) a_use <- 1
-    cvfit <- glmnet::cv.glmnet(x_all, y_all, family = "binomial", alpha = a_use, standardize = TRUE)
+    y_all_num <- .y_to_num(y_all)
+    cvfit <- glmnet::cv.glmnet(x_all, y_all_num, family = "binomial",
+                           alpha = a_use, standardize = TRUE)
     beta  <- as.matrix(stats::coef(cvfit, s = "lambda.min"))
     intercept <- as.numeric(beta[1, 1])
     
@@ -1953,6 +2029,31 @@ fh_hunter <- function(
     formula_source <- "unknown_surrogate_logit"
   }
   
+  
+  
+  # ---- persist formula to text (snapshot + rolling log) ----
+  ts_disp <- if (exists(".ts")) .ts() else format(Sys.time(), "%Y-%m-%d %H:%M:%S")
+  ts_file <- gsub("[: ]", "-", ts_disp)
+  
+  file_ts <- file.path(plots_dir, sprintf("fh_formula_%s.txt", ts_file))
+  log_file <- file.path(plots_dir, "fh_formula_log.txt")
+  
+  lines <- c(
+    sprintf("[fh_hunter] timestamp: %s", ts_disp),
+    sprintf("[fh_hunter] model_type: %s", if (exists("model_type")) as.character(model_type) else NA_character_),
+    sprintf("[fh_hunter] formula_source: %s", if (exists("formula_source")) as.character(formula_source) else NA_character_),
+    sprintf("[fh_hunter] n_features: %s", if (exists("coef_summary")) nrow(coef_summary) - 1L else NA_integer_),
+    sprintf("[fh_hunter] formula: %s", if (exists("formula_str")) formula_str else NA_character_)
+  )
+  
+  writeLines(lines, file_ts)  # snapshot file
+  write(paste(lines, collapse = "\n"), file = log_file, append = TRUE)
+  write("\n---\n", file = log_file, append = TRUE)
+  
+  message(sprintf("[%s] Saved formula to: %s", if (exists(".ts")) .ts() else ts_disp, file_ts))
+  message(sprintf("[%s] Appended formula to: %s", if (exists(".ts")) .ts() else ts_disp, log_file))
+  
+  # ---- wrap up and return ----
   invisible(list(
     params = list(
       top_models_csv = top_models_csv,

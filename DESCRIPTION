@@ -1,7 +1,7 @@
 Package: FeatureHunter
 Type: Package
 Title: Machine Learning and Deep Learning Workflow Helpers
-Version: 0.1.1
+Version: 1.0.1
 Authors@R: 
     person(given = "Zeyu", family = "Liu", role = c("aut", "cre"),
            email = "plnzcys@sina.com")
@@ -47,4 +47,8 @@ Imports:
     partykit,
     rpart,
     tidyselect,
-    logistf
+    logistf,
+    magrittr,
+    fastICA,
+    data.table,
+    mixOmics
