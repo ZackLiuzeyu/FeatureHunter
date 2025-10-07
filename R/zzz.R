@@ -6,7 +6,7 @@
 .onAttach <- function(libname, pkgname) {
   packageStartupMessage(
     "  ======================================================\n",
-    "   Welcome to FeatureHunter v0.1.1 !!!\n",
+    "   Welcome to FeatureHunter v1.0.2 !!!\n",
     "   Hint: Use fh_init_tf() if you plan to use deep learning models.\n",
     "   28 Interfaces Implemented (Grouped):\n\n",
     
