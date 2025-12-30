@@ -1134,6 +1134,7 @@ decide_threshold_method <- function(probs, y_true, imbalance_thresh = 0.35, pr_v
     roc_gain <- max(roc_auc - 0.5, 0); pr_gain <- max(pr_auc - prev1, 0)
     ratio <- if (roc_gain > 0) pr_gain / roc_gain else 1
     if (ratio < pr_vs_roc_gate) return("youden")
+    return("f1")
   }
   "youden"
 }
