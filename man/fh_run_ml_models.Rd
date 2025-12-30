@@ -22,7 +22,8 @@ fh_run_ml_models(
   eta = 0.5,
   auto_th_method = "youden",
   cores = NULL,
-  which_models = "all"
+  which_models = "all",
+  collector = NULL
 )
 }
 \arguments{
@@ -79,6 +80,10 @@ Parallel cores. If \code{NULL}, uses \code{max(1, detectCores()-1)}. Passed to G
 
 \item{which_models}{character = "all"
 Which model runners to execute. \code{"all"} runs all 27, or pass a subset.}
+
+\item{collector}{list NULL
+Optional external collector created with \code{.fh_new_collector()}. If \code{NULL}, a new
+collector will be initialized inside the function.}
 }
 \value{
 list

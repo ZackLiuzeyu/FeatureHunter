@@ -1155,6 +1155,7 @@ to01 <- function(x) {
 # if (!exists("auto_th_method")) auto_th_method <- "auto"
 
 
+#' @keywords internal
 .fh_new_collector <- function() {
   new.env(parent = emptyenv())
 }

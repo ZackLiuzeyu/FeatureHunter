@@ -64,13 +64,17 @@
 #' @param auto_th_method character = "youden"  
 #' Auto threshold method for functions exposing it.
 #'
-#' @param cores integer(NULL)  
+#' @param cores integer(NULL)
 #' Parallel cores. If `NULL`, uses `max(1, detectCores()-1)`. Passed to GBM CV-based functions that need it.
 #'
-#' @param which_models character = "all"  
+#' @param which_models character = "all"
 #' Which model runners to execute. `"all"` runs all 27, or pass a subset.
 #'
-#' @return list  
+#' @param collector list NULL
+#' Optional external collector created with `.fh_new_collector()`. If `NULL`, a new
+#' collector will be initialized inside the function.
+#'
+#' @return list
 #' Named list (size ≤ 27) of each model’s return value. Errors are caught and returned as `NULL` with a message.
 #'
 #' @examples
@@ -115,8 +119,14 @@ fh_run_ml_models <- function(
     eta        = 0.5,
     auto_th_method = "youden",
     cores      = NULL,
-    which_models = "all"
+    which_models = "all",
+    collector  = NULL
 ){
+  if (is.null(collector)) {
+    message("No external collector provided. Initializing a new one internally...")
+    collector <- .fh_new_collector()
+  }
+
   # fallback cores
   if (is.null(cores)) {
     cores <- 1L
