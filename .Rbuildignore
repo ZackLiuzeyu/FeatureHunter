@@ -1,0 +1,12 @@
+^_pkgdown\.yml$
+^docs$
+^pkgdown$
+^.*\.Rproj$
+^\.Rproj\.user$
+^LICENSE\.md$
+^\.git$
+^\.gitignore$
+^\.github$
+^\.github/workflows$
+^.*\.Rproj$
+^\.Rproj\.user$

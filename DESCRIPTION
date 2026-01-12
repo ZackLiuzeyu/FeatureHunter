@@ -1,0 +1,56 @@
+Package: FeatureHunter
+Type: Package
+Title: Machine Learning and Deep Learning Workflow Helpers
+Version: 1.1.0
+Authors@R: 
+    person(given = "Zeyu", family = "Liu", role = c("aut", "cre"),
+           email = "plnzcys@sina.com")
+Description: Provides helper functions for machine learning (ML) and deep learning (DL) workflows. 
+    Includes preprocessing utilities, threshold selection, MLP builder, performance metrics, 
+    visualization, and 28 model interface functions.
+License: MIT + file LICENSE
+Encoding: UTF-8
+LazyData: true
+Depends: R (>= 4.1.0)
+Roxygen: list(markdown = TRUE)
+RoxygenNote: 7.3.2
+URL: https://github.com/ZackLiuzeyu/FeatureHunter
+BugReports: https://github.com/ZackLiuzeyu/FeatureHunter/issues
+Config/testthat/edition: 3
+Imports:
+    pROC,
+    tibble,
+    ggplot2,
+    dplyr,
+    MASS,
+    tree,
+    glmnet,
+    ComplexHeatmap,
+    precrec,
+    fastshap,
+    umap,
+    PRROC,
+    gridExtra,
+    doParallel,
+    foreach,
+    tidyselect,
+    magrittr,
+    fastICA,
+    data.table,
+    mixOmics
+Suggests: 
+    testthat (>= 3.0.0),
+    keras3,
+    caret,
+    tensorflow,
+    class,
+    randomForest,
+    xgboost,
+    e1071,
+    gbm,
+    ranger,
+    reticulate,
+    FNN,
+    partykit,
+    rpart,
+    logistf
