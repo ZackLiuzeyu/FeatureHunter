@@ -1,6 +1,9 @@
-.Rproj.user
+.Rproj.user/
 .Rhistory
-.Rdata
+.RData
+.Ruserdata
 .httr-oauth
 .DS_Store
-.quarto
+.quarto/
+*.Rcheck/
+*.tar.gz
