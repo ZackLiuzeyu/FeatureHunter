@@ -54,3 +54,5 @@ Imports:
     logistf
 Remotes: 
     bioc::mixOmics
+Suggests: 
+    testthat (>= 3.0.0)
