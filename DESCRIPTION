@@ -37,9 +37,7 @@ Imports:
     magrittr,
     fastICA,
     data.table,
-    mixOmics
-Suggests: 
-    testthat (>= 3.0.0),
+    mixOmics,
     keras3,
     caret,
     tensorflow,
@@ -54,3 +52,5 @@ Suggests:
     partykit,
     rpart,
     logistf
+Remotes: 
+    bioc::mixOmics
